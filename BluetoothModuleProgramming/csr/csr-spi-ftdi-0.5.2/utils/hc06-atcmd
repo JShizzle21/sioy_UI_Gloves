@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+hc06-atcmd
+
+=head1 SYNOPSIS
+
+hc06-atcmd <tty> [<AT_command>]
+
+=head1 DESCRIPTION
+
+Issue AT command to HC06 Bluetooth module and print the result.
+
+If no I<AT_command> is given, it issues C<AT+VERSION> command and prints the
+result.
+
+=cut
+
+use strict;
+use warnings;
+
+my $dev = shift @ARGV;
+my $cmd = shift @ARGV || "AT+VERSION";
+
+unless ($dev) {
+    print "usage: $0 <tty> [AT_COMMAND]\n";
+    exit 1;
+}
+
+open my $fh, "+<", $dev
+    or die "$!";
+
+syswrite $fh, $cmd;
+print "==> $cmd\n";
+
+my $nread = sysread $fh, my $resp, 1000;
+die "$!"
+    unless defined $nread;
+print "<== $resp\n";
+
+close $fh;
