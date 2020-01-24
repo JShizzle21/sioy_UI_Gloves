@@ -7,25 +7,19 @@ bool isOn = false;
 int sensorValue = -1;
 unsigned long prevMil = 0;
 unsigned long curMil = 0;
-unsigned long prevMil2 = 0;
-unsigned long curMil2 = 0;
+unsigned long prevMil2 = 0; //used for serial monitor
+unsigned long curMil2 = 0; //used for serial monitor
 unsigned long prevMil3 = 0;
 unsigned long curMil3 = 0;
-int interval3 = 500; //minimum time between button presses <--bad, should fix
+int interval3 = 100; //minimum time between button presses <--bad, should fix
 int interval = 20;
-int interval2 = 5000;
-int prevRead = 0;
+int interval2 = 5000; //used for serial monitor
 int newRead = 0;
-int read1 = 300;
-int read2 = 300;
-int read3 = 300;
-int read4 = 300;
-int read5 = 300;
-int read6 = 300;
+int tempArray[6] = {300,300,300,300,300,300};
+int readArray[6] = {300,300,300,300,300,300};
 int prevAvgRead = 300;
 int newAvgRead = 300;
-int timeline = 1; //values of 1,2,3,4,5,6
-
+int threshold = 70;
 
 void setup() {
   pinMode(A0, INPUT_PULLUP);
@@ -61,63 +55,31 @@ void loop() {
   //Serial.println(prevAvgRead);
   //Serial.println(newAvgRead);
   //Serial.println("hi");
-  delay(10);
+  delay(1);
 }
 
 bool trigger() {
   curMil = millis();
   curMil3 = curMil;
   newRead = sensorValue;
-  if (curMil - prevMil > interval) {
-
+  if (curMil - prevMil > interval) {//this if statement determines the new average reads
+    for(int i = 0; i < 6; i++) {
+      tempArray[i] = readArray[i];
+    }
+    for(int i = 0; i < 5; i++) {
+      readArray[i] = tempArray[i+1];
+    }
+    readArray[5] = newRead;
     
-    timeline++;
-    if (timeline > 6) timeline = 1;
-    if (timeline == 1) {
-      read1 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-    if (timeline == 2) {
-      read2 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-    if (timeline == 3) {
-      read3 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-    if (timeline == 4) {
-      read4 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-    if (timeline == 5) {
-      read5 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-    if (timeline == 6) {
-      read6 = sensorValue;
-      prevAvgRead = read1+read2+read3/3;
-      newAvgRead = read4+read5+read6/3;
-    }
-
+    prevAvgRead = (readArray[0]+readArray[1]+readArray[2])/3;
+    newAvgRead = (readArray[3]+readArray[4]+readArray[5])/3;
     
-    if (prevAvgRead - newAvgRead > 90 && curMil3 - prevMil3 > interval3) {
+    if (prevAvgRead - newAvgRead > threshold && curMil3 - prevMil3 > interval3) {
       prevMil = millis();
-      prevRead = sensorValue;
       prevMil3 = curMil3;
-      return 1;
+      return true;
     }
-    else {
-      prevRead = sensorValue;
-      return 0;
-    }
+    else return false;
   }
-  else {
-    prevRead = sensorValue;
-    return 0;
-  }
+  else return false;
 }

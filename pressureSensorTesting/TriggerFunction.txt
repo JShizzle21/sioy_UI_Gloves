@@ -1,0 +1,60 @@
+//TRIGGER REQUIREMENTS
+#include <math.h>
+
+int sensorValue[8] = {0,0,0,0,0,0,0,0};
+unsigned long prevMil[8] = {0,0,0,0,0,0,0,0};
+unsigned long curMil[8] = {0,0,0,0,0,0,0,0};
+unsigned long prevMil2[8] = {0,0,0,0,0,0,0,0};
+unsigned long curMil2[8] = {0,0,0,0,0,0,0,0};
+int newRead[8] = {0,0,0,0,0,0,0,0};
+int prevAvgRead[8] = {300,300,300,300,300,300,300,300};
+int newAvgRead[8] = {300,300,300,300,300,300,300,300};
+int tempArray[8][6] = {{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300}};
+int readArray[8][6] = {{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300},
+{300,300,300,300,300,300}};
+
+int buttons[8] = {0,1,2,3,4,5,6,7};
+
+const int interval = 20; //minimum time between new average reads
+const int interval2 = 100; //minimum time between button presses
+const int threshold = 70;
+
+//TRIGGER FUNCTION:
+bool trigger(int curButton) {
+  curMil[curButton] = millis();
+  curMil2[curButton] = curMil[curButton];
+  newRead[curButton] = sensorValue[curButton];
+  if (curMil[curButton] - prevMil[curButton] > interval) {//this if statement determines the new average reads
+    for(int i = 0; i < 6; i++) {
+      tempArray[curButton][i] = readArray[curButton][i];
+    }
+    for(int i = 0; i < 5; i++) {
+      readArray[curButton][i] = tempArray[curButton][i+1];
+    }
+    readArray[curButton][5] = newRead[curButton];
+    
+    prevAvgRead[curButton] = (readArray[curButton][0]+readArray[curButton][1]+readArray[curButton][2])/3;
+    newAvgRead[curButton] = (readArray[curButton][3]+readArray[curButton][4]+readArray[curButton][5])/3;
+    
+    if (prevAvgRead[curButton] - newAvgRead[curButton] > threshold && curMil2[curButton] - prevMil2[curButton] > interval2) {
+      prevMil[curButton] = millis();
+      prevMil2[curButton] = curMil2[curButton];
+      return true;
+    }
+    else return false;
+  }
+  else return false;
+}
