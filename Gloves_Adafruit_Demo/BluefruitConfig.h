@@ -31,9 +31,9 @@
 // The following macros declare the pins that will be used for 'SW' serial.
 // You should use this option if you are connecting the UART Friend to an UNO
 // ----------------------------------------------------------------------------------------------
-#define BLUEFRUIT_SWUART_RXD_PIN       7//9    // Required for software serial!
-#define BLUEFRUIT_SWUART_TXD_PIN       8//10   // Required for software serial!
-#define BLUEFRUIT_UART_CTS_PIN         9//11   // Required for software serial!
+#define BLUEFRUIT_SWUART_RXD_PIN       3//7//9    // Required for software serial!
+#define BLUEFRUIT_SWUART_TXD_PIN       4//8//10   // Required for software serial!
+#define BLUEFRUIT_UART_CTS_PIN         2//9//11   // Required for software serial!
 #define BLUEFRUIT_UART_RTS_PIN         -1   // Optional, set to -1 if unused
 
 

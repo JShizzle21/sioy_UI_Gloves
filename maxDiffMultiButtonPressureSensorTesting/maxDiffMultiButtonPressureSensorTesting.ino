@@ -68,7 +68,7 @@ int buttons[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 const int interval = 20; //minimum time between new average reads
 const int interval2 = 101; //minimum time between button presses
-const int threshold = 120;
+const int threshold = 150;
 
 void setup() {
   pinMode(A0, INPUT_PULLUP);

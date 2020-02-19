@@ -41,6 +41,7 @@
 #include "Adafruit_BluefruitLE_UART.h"
 
 #include "BluefruitConfig.h"
+#include "PressureSensor.h"
 
 #if SOFTWARE_SERIAL_AVAILABLE
   #include <SoftwareSerial.h>
@@ -107,18 +108,70 @@ void error(const __FlashStringHelper*err) {
   while (1);
 }
 
+void init_board()
+{
+  pinMode(A0, INPUT_PULLUP);
+  pinMode(A1, INPUT_PULLUP);
+  pinMode(A2, INPUT_PULLUP);
+  pinMode(A3, INPUT_PULLUP);
+  pinMode(A4, INPUT_PULLUP);
+  pinMode(A5, INPUT_PULLUP);
+  pinMode(A6, INPUT_PULLUP);
+  pinMode(A7, INPUT_PULLUP);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, LOW);
+}
 
 void setup(void)
 {
-  pinMode(LED, OUTPUT);
-  
+  Serial.begin(115200);
+  init_board();
   init_Bluefruit();
+  Serial.println("-----DELAY----");
+  delay(5000);
+  Serial.println("-----END DELAY-----");
+  
 }
+
+bool button_press = false;
 
 void loop(void)
 {
+  sensorValue[0] = analogRead(myPin0);
+  sensorValue[1] = analogRead(myPin1);
+  sensorValue[2] = analogRead(myPin2);
+  sensorValue[3] = analogRead(myPin3);
+  sensorValue[4] = analogRead(myPin4);
+  sensorValue[5] = analogRead(myPin5);
+  sensorValue[6] = analogRead(myPin6);
+  sensorValue[7] = analogRead(myPin7);
 
+
+  
+  for(int i = 0; i < NUM_OF_PINS; i++)
+  {
+    triggers[i] = trigger(i);
+    
+  }
+  
+  button_press = false;
+  for(int i = 0; i < NUM_OF_PINS; i++)
+  {
+    if(triggers[i])
+    {
+      button_press = true;
+      break;
+    }
+  }
+  
+  print_graph();
+  
+
+  
+  if(button_press){
+    
   // Display prompt
+  Serial.println("BUTTON PRESSED");
   Serial.print(F("Control (? for help) > "));
 
   // Check for user input and echo it back if anything was found
@@ -145,34 +198,102 @@ void loop(void)
     }
   }
 
+    blink_led(1000);
+  }
+
+}
+
+//TRIGGER FUNCTION:
+bool trigger(int curButton) {
+  curMil[curButton] = millis();
+  curMil2[curButton] = curMil[curButton];
+  newRead[curButton] = sensorValue[curButton];
+  if (curMil[curButton] - prevMil[curButton] > interval) {//this if statement determines the new average reads
+
+    for (int i = 0; i < 15; i++) { //updates difference array
+      tempDifferenceArray[curButton][i] = differenceArray[curButton][i]; //index 0 is oldest, index 5 is newest
+    }
+    for (int i = 0; i < 14; i++) {
+      differenceArray[curButton][i] = tempDifferenceArray[curButton][i + 1];
+    }
+    
+    //if (differenceArray[curButton][4] < 0) differenceArray[curButton][4] = 0;//attempt to reduce noise from finger bending
+
+    for (int i = 0; i < 6; i++) { //updates read array
+      tempArray[curButton][i] = readArray[curButton][i];
+    }
+    for (int i = 0; i < 5; i++) {
+      readArray[curButton][i] = tempArray[curButton][i + 1];
+    }
+    readArray[curButton][5] = newRead[curButton];
+
+    prevAvgRead[curButton] = (readArray[curButton][0] + readArray[curButton][1] + readArray[curButton][2]) / 3;
+    newAvgRead[curButton] = (readArray[curButton][3] + readArray[curButton][4] + readArray[curButton][5]) / 3;
+    differenceArray[curButton][5] = prevAvgRead[curButton] - newAvgRead[curButton];
+
+    maxDiff[curButton] = 0;
+    for (int i = 0; i < 14; i++) {
+      for (int j = i+1; j < 15; j++) {
+        if (differenceArray[curButton][i] > 0 && differenceArray[curButton][j] < 0) {
+          if (differenceArray[curButton][i] - differenceArray[curButton][j] > maxDiff[curButton]) {
+            maxDiff[curButton] = differenceArray[curButton][i] - differenceArray[curButton][j];
+          }
+        }
+      }
+    }
+    
+    if (curMil2[curButton] - prevMil2[curButton] > interval2                 //here is the threshold/change if statement
+        && maxDiff[curButton] > threshold) {
+      prevMil[curButton] = millis();
+      prevMil2[curButton] = curMil2[curButton];
+      return true;
+    }
+    else return false;
+  }
+  else return false;
+}
+
+void blink_led(int mil_sec)
+{
+  digitalWrite(LED, HIGH);
+  delay(mil_sec);
+  digitalWrite(LED, LOW);
 }
 
 void getCommand(char buffer[], uint8_t maxSize)
 {
-  
   memset(buffer, 0, maxSize);
 
-  while(analogRead(VOL_UP_PIN)*VOLTAGE_CONVERSION < THRESHOLD &&
-        analogRead(VOL_DOWN_PIN)*VOLTAGE_CONVERSION < THRESHOLD &&
-        analogRead(PLAY_PAUSE_PIN)*VOLTAGE_CONVERSION < THRESHOLD &&
-        analogRead(NEXT_SONG_PIN)*VOLTAGE_CONVERSION < THRESHOLD) {
-            delay(1);
-            }
+  for(int i = 0; i < NUM_OF_PINS; i++)
+  {
+    if(triggers[i])
+    {
+      switch (i)
+      {
+        case 0: strcpy(buffer, CMD0);
+          break;
+        case 1: strcpy(buffer, CMD1);
+          break;
+        case 2: strcpy(buffer, CMD2);
+          break;
+        case 3: strcpy(buffer, CMD3);
+          break;
+        case 4: strcpy(buffer, CMD4);
+          break;
+        case 5: strcpy(buffer, CMD5);
+          break;
+        case 6: strcpy(buffer, CMD6);
+          break;
+        case 7: strcpy(buffer, CMD7);
+          break;
+        default: strcpy(buffer, CMD_DEFAULT);
+      }
 
-  if(analogRead(VOL_UP_PIN)*VOLTAGE_CONVERSION >= THRESHOLD) {
-    strcpy(buffer, VOL_UP_CMD);
-  } else if(analogRead(VOL_DOWN_PIN)*VOLTAGE_CONVERSION >= THRESHOLD) {
-    strcpy(buffer, VOL_DOWN_CMD);
-  } else if(analogRead(PLAY_PAUSE_PIN)*VOLTAGE_CONVERSION >= THRESHOLD) {
-    strcpy(buffer, PLAY_PAUSE_CMD);
-  } else if(analogRead(NEXT_SONG_PIN)*VOLTAGE_CONVERSION >= THRESHOLD) {
-    strcpy(buffer, NEXT_SONG_CMD);
+      break;
+    }
+    
   }
-  
 
-  digitalWrite(LED, HIGH);
-  delay(500);
-  digitalWrite(LED, LOW);
 }
 
 /**************************************************************************/
@@ -312,4 +433,30 @@ void printDefinedControlKey(void)
     "- REFRESH" "\n"
     "- BOOKMARKS" "\n"
   ));
+}
+
+void print_graph()
+{
+  //This is to show graphs
+  
+  if(maxDiff[0] > 0)
+  {
+  Serial.println(maxDiff[0]);
+  }
+  //Serial.print(maxDiff[1]);
+  //Serial.print(maxDiff[2]);
+  //Serial.print(maxDiff[3]);
+  //Serial.print(maxDiff[4]);
+  //Serial.print(maxDiff[5]);
+  //Serial.print(maxDiff[6]);
+  //Serial.println(maxDiff[7]);
+
+  /*
+  curMil4 = millis();
+  if (curMil4 - prevMil4 > interval4) {
+    prevMil4 = curMil4;
+    Serial.println(600);
+    //Serial.println(-600);
+  }
+  */
 }

@@ -1,16 +1,25 @@
 //Pin Definitions
-#define VOL_UP_PIN A3
-#define VOL_DOWN_PIN A2
-#define PLAY_PAUSE_PIN A1
-#define NEXT_SONG_PIN A0
+#define MUTE            A6
+#define TOGGLE          A5
+#define PREV_SONG_PIN   A4
+#define VOL_UP_PIN      A3
+#define VOL_DOWN_PIN    A2
+#define PLAY_PAUSE_PIN  A1
+#define NEXT_SONG_PIN   A0
+
 #define LED LED_BUILTIN
 
 //Pre-defined commands
 #define AT_CMD "AT+BleHidControlKey="
-#define VOL_UP_CMD "VOLUME+"
-#define VOL_DOWN_CMD "VOLUME-"
-#define PLAY_PAUSE_CMD "PLAYPAUSE"
-#define NEXT_SONG_CMD "MEDIANEXT"
+#define CMD0 "PLAYPAUSE"
+#define CMD1 ""
+#define CMD2 ""
+#define CMD3 ""
+#define CMD4 "MEDIANEXT"
+#define CMD5 ""
+#define CMD6 ""
+#define CMD7 ""
+#define CMD_DEFAULT ""
 
 //Analog read values
 #define OPERATING_VOLTAGE 3.3
@@ -31,9 +40,9 @@
 // The following macros declare the pins that will be used for 'SW' serial.
 // You should use this option if you are connecting the UART Friend to an UNO
 // ----------------------------------------------------------------------------------------------
-#define BLUEFRUIT_SWUART_RXD_PIN       7//9    // Required for software serial!
-#define BLUEFRUIT_SWUART_TXD_PIN       8//10   // Required for software serial!
-#define BLUEFRUIT_UART_CTS_PIN         9//11   // Required for software serial!
+#define BLUEFRUIT_SWUART_RXD_PIN       3//9    // Required for software serial!
+#define BLUEFRUIT_SWUART_TXD_PIN       4//10   // Required for software serial!
+#define BLUEFRUIT_UART_CTS_PIN         2//11   // Required for software serial!
 #define BLUEFRUIT_UART_RTS_PIN         -1   // Optional, set to -1 if unused
 
 
